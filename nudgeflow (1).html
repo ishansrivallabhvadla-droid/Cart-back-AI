@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>NudgeFlow | Cart Ghost</title>
+<style>
+:root{--bg:#f4f7f5;--ink:#152019;--muted:#6d7871;--line:#dfe6e1;--green:#126b43;--pale:#e4f5eb;--dark:#102019;--amber:#8b6a20;--amberbg:#fff2cf;--blue:#2a4a8f;--bluebg:#dce8ff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,Arial,sans-serif}
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:238px;background:var(--dark);color:#fff;padding:27px 17px;display:flex;flex-direction:column}
+.logo{font-size:20px;font-weight:800;display:flex;align-items:center;gap:10px}
+.logo span{width:34px;height:34px;background:#bcefd0;color:var(--dark);border-radius:10px;display:grid;place-items:center}
+.product-tag{font-size:10px;letter-spacing:2px;color:#91a89b;margin:42px 10px 15px;font-weight:700}
+nav{display:grid;gap:5px}nav a{padding:12px;border-radius:8px;color:#b9c7bf;font-size:13px;text-decoration:none;cursor:pointer;display:block}
+nav a.active,nav a:hover{background:#20372b;color:#fff}
+nav b{float:right;background:#335243;color:#d8e7df;border-radius:20px;padding:2px 7px;font-size:10px}
+.side-bottom{margin-top:auto;color:#8fa298;display:grid;gap:7px;font-size:11px}
+.live{color:#bde7cb}.live i{display:inline-block;width:7px;height:7px;border-radius:50%;background:#5ee18d;margin-right:6px}
+main{margin-left:238px;padding:42px 45px;max-width:1450px}
+header{display:flex;justify-content:space-between;gap:30px;margin-bottom:28px;flex-wrap:wrap}
+.eyebrow{font-size:10px;letter-spacing:1.8px;color:var(--green);font-weight:800;margin-bottom:9px}
+h1{font-size:35px;line-height:1.08;margin:0 0 12px;letter-spacing:-1px}
+.sub{max-width:670px;color:var(--muted);font-size:14px;line-height:1.55;margin:0}
+.header-actions{display:flex;gap:8px;align-items:flex-start}
+.primary,.outline{border-radius:8px;padding:11px 15px;font-weight:700;font-size:12px;cursor:pointer}
+.primary{border:1px solid var(--green);background:var(--green);color:#fff}
+.primary:disabled{opacity:.5;cursor:not-allowed}
+.outline{border:1px solid var(--line);background:#fff;color:var(--ink)}
+.outline.small,.primary.small{padding:7px 10px;font-size:11px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:13px;margin-bottom:17px}
+.stat,.card{background:#fff;border:1px solid var(--line);border-radius:11px}
+.stat{padding:17px}.stat span{font-size:11px;color:var(--muted)}
+.stat strong{display:block;font-size:27px;margin:7px 0 3px}
+.stat em{font-size:10px;color:var(--muted);font-style:normal}
+.positive,.green-number{color:var(--green)!important}
+.content-grid{display:grid;grid-template-columns:1.12fr .88fr;gap:17px}
+.bottom-grid{display:grid;grid-template-columns:1.12fr .88fr;gap:17px;margin-top:17px}
+.card{overflow:hidden}
+.card-head{padding:17px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.card h2{font-size:15px;margin:0 0 4px}.card-head p{font-size:11px;color:var(--muted);margin:0}
+.badge,.intent-pill{font-size:10px;padding:6px 9px;border-radius:20px;background:var(--pale);color:var(--green);font-weight:800;white-space:nowrap}
+.badge.ai{background:var(--bluebg);color:var(--blue)}
+.filter-tabs{display:flex;gap:6px}
+.filter-tabs button{border:1px solid var(--line);background:#fff;border-radius:20px;padding:5px 10px;font-size:10px;font-weight:700;cursor:pointer;color:var(--muted)}
+.filter-tabs button.active{background:var(--dark);border-color:var(--dark);color:#fff}
+.customer{display:flex;align-items:center;gap:11px;padding:14px 16px;border-bottom:1px solid var(--line);cursor:pointer}
+.customer:hover,.customer.selected{background:#f8fbf9}
+.avatar{width:35px;height:35px;border-radius:10px;display:grid;place-items:center;font-weight:800;font-size:12px;background:#e3ece7}
+.a2{background:#e9e5f3}.a3{background:#f2e8dc}.a4{background:#e2e9f3}
+.customer-info{flex:1;min-width:0}.customer-info strong{display:block;font-size:12px}
+.customer-info span,.customer-info small{display:block;color:var(--muted);font-size:10px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.intent{text-align:right;margin-right:4px}.intent strong{font-size:12px;color:var(--green)}
+.intent small{display:block;font-size:9px;color:var(--muted)}.intent.low strong{color:#87918b}
+.status{font-size:8px;font-weight:800;border-radius:20px;padding:5px 7px;white-space:nowrap}
+.waiting{background:var(--pale);color:var(--green)}.cooldown{background:var(--amberbg);color:var(--amber)}
+.ignored{background:#edf0ee;color:#69746d}.recovered-badge{background:var(--bluebg);color:var(--blue)}
+.empty-state{padding:30px 20px;text-align:center;color:var(--muted);font-size:12px}
+.chat{padding:17px 18px;min-height:270px;background:#fafcfa}
+.msg{max-width:78%;padding:10px 12px;border-radius:10px;margin:8px 0;font-size:11px;line-height:1.45}
+.msg time{display:block;font-size:9px;color:#8b948e;margin-top:4px}
+.customer-msg{background:#fff;border:1px solid var(--line)}.store-msg{background:#dcf2e5;margin-left:auto}
+.store-msg.system{background:var(--bluebg)}
+.signal{font-size:10px;color:var(--green);font-weight:700;background:var(--pale);padding:9px 11px;border-radius:8px;margin-top:13px}
+.decision{display:grid;grid-template-columns:1fr 1fr 1fr;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.decision div{padding:12px 14px;border-right:1px solid var(--line)}.decision div:last-child{border:0}
+.decision span{font-size:9px;color:var(--muted);display:block}.decision strong{font-size:11px;display:block;margin-top:5px}
+.green{color:var(--green)}.full{width:calc(100% - 36px);margin:15px 18px 5px}
+.micro{text-align:center;color:var(--muted);font-size:9px;margin:0 0 15px}
+.bars{height:125px;padding:20px 25px 0;display:flex;align-items:flex-end;gap:13px}
+.bars div{flex:1;border-radius:5px 5px 0 0;background:#9dd8b7;position:relative;min-height:2px}
+.days{display:flex;justify-content:space-around;padding:8px 20px 15px;color:var(--muted);font-size:9px}
+.green-number{font-size:20px;font-weight:800}.rules{padding-bottom:6px}
+.rule{display:flex;align-items:center;gap:9px;padding:11px 18px;border-bottom:1px solid var(--line);font-size:10px}
+.rule i{width:19px;height:19px;border-radius:6px;background:var(--pale);color:var(--green);display:grid;place-items:center;font-style:normal;font-weight:800}
+.rule span{flex:1}.rule b{font-size:8px;color:var(--green)}
+.modal{display:none;position:fixed;inset:0;background:#0d1812aa;align-items:center;justify-content:center;padding:20px;z-index:10}
+.modal.show{display:flex}
+.modal-box{width:min(480px,100%);background:#fff;border-radius:14px;padding:26px;position:relative;box-shadow:0 20px 70px #0003;max-height:88vh;overflow:auto}
+.modal-box h2{margin:0 0 7px;font-size:22px}.modal-box p{color:var(--muted);font-size:12px}
+.close{position:absolute;right:17px;top:14px;border:0;background:none;font-size:25px;color:var(--muted);cursor:pointer}
+.preview{background:#f5f8f6;border:1px solid var(--line);border-radius:10px;padding:15px;font-size:12px;line-height:1.5;margin:18px 0}
+.template-picker{display:grid;gap:7px;margin-bottom:16px}
+.template-picker label{display:flex;align-items:flex-start;gap:8px;border:1px solid var(--line);border-radius:8px;padding:9px 10px;font-size:11px;cursor:pointer}
+.template-picker label.chosen{border-color:var(--green);background:var(--pale)}
+.template-picker input{margin-top:2px}
+.modal-actions{display:flex;justify-content:flex-end;gap:8px}
+.toast{position:fixed;right:25px;bottom:25px;background:var(--dark);color:#fff;padding:11px 15px;border-radius:8px;font-size:11px;opacity:0;transform:translateY(10px);transition:.25s;z-index:20;max-width:320px}
+.toast.show{opacity:1;transform:translateY(0)}
+.backend-info{margin-top:17px;background:#102019;color:#dbe9e1;border-radius:11px;padding:14px 17px;display:flex;align-items:center;gap:18px;font-size:10px;flex-wrap:wrap}
+.backend-info>div{display:flex;align-items:center;gap:7px}
+.backend-dot{width:8px;height:8px;border-radius:50%;background:#5ee18d}
+.backend-dot.busy{background:#f4c05a}
+.api-list{margin-left:auto;color:#9bb2a5}
+.new-form{padding:16px 18px;display:grid;gap:9px}
+.new-form input{border:1px solid var(--line);border-radius:8px;padding:9px 10px;font-size:12px;font-family:inherit;width:100%}
+.new-form label{font-size:10px;color:var(--muted);font-weight:700;display:block;margin-bottom:4px}
+.new-form-grid{grid-template-columns:1fr 1fr;align-items:end}
+.new-form-grid .span2{grid-column:1/-1}
+.link-row{display:flex;align-items:center;gap:8px;padding:12px 18px;border-top:1px solid var(--line);background:#fafcfa;flex-wrap:wrap}
+.link-row span.lbl{font-size:9px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.link-row code{flex:1;min-width:180px;font-size:11px;background:#fff;border:1px solid var(--line);border-radius:6px;padding:7px 9px;word-break:break-all}
+.link-row button{border:1px solid var(--line);background:#fff;border-radius:6px;padding:6px 10px;font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap}
+.meta-row{display:flex;gap:16px;padding:12px 18px;border-top:1px solid var(--line);flex-wrap:wrap;font-size:11px}
+.meta-row div span{display:block;color:var(--muted);font-size:9px;text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px}
+.meta-row div strong{font-size:12px}
+.toggle-row{display:flex;align-items:center;gap:9px;padding:12px 18px;border-top:1px solid var(--line);font-size:11px;background:#fafcfa}
+.switch{position:relative;width:34px;height:19px;flex-shrink:0}
+.switch input{opacity:0;width:0;height:0}
+.slider{position:absolute;inset:0;background:#c7d2cb;border-radius:20px;cursor:pointer;transition:.2s}
+.slider:before{content:"";position:absolute;width:15px;height:15px;left:2px;top:2px;background:#fff;border-radius:50%;transition:.2s}
+input:checked+.slider{background:var(--green)}
+input:checked+.slider:before{transform:translateX(15px)}
+.pagebar{display:flex;gap:6px;margin-bottom:17px}
+.pagebar button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:8px 13px;font-size:11px;font-weight:700;cursor:pointer;color:var(--muted)}
+.pagebar button.active{background:var(--dark);border-color:var(--dark);color:#fff}
+table.data{width:100%;border-collapse:collapse;font-size:11px}
+table.data th{text-align:left;color:var(--muted);font-weight:700;font-size:9px;text-transform:uppercase;letter-spacing:.4px;padding:10px 16px;border-bottom:1px solid var(--line)}
+table.data td{padding:11px 16px;border-bottom:1px solid var(--line)}
+table.data tr:last-child td{border-bottom:0}
+.funnel{padding:18px}
+.funnel-step{display:grid;grid-template-columns:120px 1fr 50px;align-items:center;gap:12px;margin-bottom:10px;font-size:11px}
+.funnel-track{background:#eef3f0;border-radius:6px;height:22px;overflow:hidden}
+.funnel-fill{height:100%;background:var(--green);border-radius:6px;display:flex;align-items:center;transition:width .4s}
+.tplcard{border:1px solid var(--line);border-radius:10px;padding:13px 15px;margin:12px 16px}
+.tplcard h3{margin:0 0 3px;font-size:12px}
+.tplcard .row{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:8px}
+.tplcard .rate{font-size:17px;font-weight:800;color:var(--green)}
+.mini-track{background:#eef3f0;border-radius:5px;height:6px;margin-top:6px;overflow:hidden}
+.mini-fill{height:100%;background:var(--green)}
+.hidden{display:none!important}
+@media(max-width:1050px){.sidebar{width:190px}main{margin-left:190px;padding:30px}.content-grid,.bottom-grid{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr}}
+@media(max-width:700px){.sidebar{position:static;width:100%;height:auto}.side-bottom,nav{display:none}main{margin:0;padding:20px}header{display:block}.header-actions{margin-top:15px}.stats{grid-template-columns:1fr}.customer-info small{display:none}.api-list{margin-left:0}}
+</style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="logo"><span>N</span> NudgeFlow</div>
+  <div class="product-tag">CART GHOST</div>
+  <nav id="mainNav">
+    <a data-nav="overview" class="active">Overview</a>
+    <a data-nav="chats">WhatsApp Chats <b id="navChats">4</b></a>
+    <a data-nav="queue">Nudge Queue <b id="navQueue">3</b></a>
+    <a data-nav="recovery">Recovery</a>
+    <a data-nav="analytics">Analytics</a>
+  </nav>
+  <div class="side-bottom">
+    <div class="live"><i></i> System active</div>
+    <small id="storageStatus">Checking storage…</small>
+    <small id="engineStatus">Rule-based intent detection</small>
+  </div>
+</aside>
+
+<main>
+<header>
+  <div>
+    <div class="eyebrow">NudgeFlow / Cart Ghost</div>
+    <h1>Recover customers<br>before they disappear.</h1>
+    <p class="sub">Detect genuine buying intent in WhatsApp chats and send the right nudge — without spamming customers.</p>
+  </div>
+  <div class="header-actions">
+    <button class="outline" onclick="refreshAll()">↻ Refresh</button>
+    <button class="primary" onclick="openNudge()">+ Create nudge</button>
+  </div>
+</header>
+
+<!-- ===================== OVERVIEW VIEW ===================== -->
+<div id="view-overview">
+<section class="stats">
+  <div class="stat"><span>Chats scanned</span><strong id="statChats">0</strong><em>persisted demo data</em></div>
+  <div class="stat"><span>Abandonment signals</span><strong id="statAbandoned">0</strong><em id="statAbandonedPct">0%</em></div>
+  <div class="stat"><span>Nudges sent</span><strong id="statNudged">0</strong><em id="statWaiting">0 waiting</em></div>
+  <div class="stat"><span>Recovered revenue</span><strong id="statRevenue">₹0</strong><em class="positive" id="statRecoveredCount">0 recovered</em></div>
+</section>
+
+<section class="content-grid">
+  <div class="card queue">
+    <div class="card-head">
+      <div><h2 id="queueTitle">Nudge queue</h2><p id="queueSub">Customers with purchase-intent signals</p></div>
+      <div class="filter-tabs" id="queueFilterTabs">
+        <button data-filter="all" class="active" onclick="setQueueFilter('all')">All</button>
+        <button data-filter="ready" onclick="setQueueFilter('ready')">Ready</button>
+        <button data-filter="recovered" onclick="setQueueFilter('recovered')">Recovered</button>
+      </div>
+    </div>
+    <div id="queueList"></div>
+  </div>
+
+  <div class="card conversation" id="conversation">
+    <div class="card-head">
+      <div><h2 id="convName">—</h2><p>WhatsApp conversation</p></div>
+      <span class="intent-pill" id="convIntentPill">—</span>
+    </div>
+    <div class="meta-row" id="metaRow">
+      <div><span>Phone number</span><strong id="metaPhone">—</strong></div>
+      <div><span>Product</span><strong id="metaProduct">—</strong></div>
+      <div><span>Price</span><strong id="metaPrice">—</strong></div>
+    </div>
+    <div class="chat" id="chatBox"></div>
+    <div class="link-row">
+      <span class="lbl">Payment link</span>
+      <code id="convLink">—</code>
+      <button onclick="copyLink()">Copy link</button>
+    </div>
+    <div class="decision">
+      <div><span>Intent</span><strong id="decIntent">—</strong></div>
+      <div><span>Cooldown</span><strong id="decCooldown">—</strong></div>
+      <div><span>Follow-ups</span><strong id="decFollowups">—</strong></div>
+    </div>
+    <div class="toggle-row">
+      <label class="switch"><input type="checkbox" id="aiToggle" onchange="toggleAI(this.checked)"><span class="slider"></span></label>
+      <span>Use AI intent classification (Claude) instead of keyword rules</span>
+      <span class="badge ai" id="aiBadge" style="margin-left:auto;display:none">AI</span>
+    </div>
+    <button class="outline full" id="detectBtn" onclick="detectSelected()">Detect intent</button>
+    <button class="primary full" id="nudgeBtn" onclick="openNudge()">Send personalized nudge →</button>
+    <p class="micro">Every send is re-validated by <code>serverValidateNudge()</code> — the single source of truth for eligibility, independent of what the button shows. Max 2 follow-ups. New rows get a mock reply after ~10s.</p>
+  </div>
+</section>
+
+<section class="bottom-grid">
+  <div class="card">
+    <div class="card-head"><div><h2>Recovery overview</h2><p>Revenue recovered, most recent activity first</p></div><span class="green-number" id="recoveryRatePill">0%</span></div>
+    <div class="bars" id="overviewBars"></div>
+    <div class="days" id="overviewBarLabels"></div>
+  </div>
+  <div class="card rules">
+    <div class="card-head"><div><h2>Nudge rules</h2><p>Hard twist protection — enforced in serverValidateNudge()</p></div></div>
+    <div class="rule"><i>✓</i><span>Real buying intent required (≥70%)</span><b>ON</b></div>
+    <div class="rule"><i>✓</i><span>30-minute cooldown</span><b>ON</b></div>
+    <div class="rule"><i>✓</i><span>Maximum 2 follow-ups</span><b>ON</b></div>
+    <div class="rule"><i>✓</i><span>Casual chat excluded</span><b>ON</b></div>
+    <div class="rule"><i>✓</i><span>No duplicate sends while one is in flight</span><b>ON</b></div>
+  </div>
+</section>
+
+<div class="card" style="margin-top:17px">
+  <div class="card-head"><div><h2>Simulate an incoming WhatsApp message</h2><p>Type as if you're the customer — NudgeFlow will classify intent</p></div></div>
+  <div class="new-form new-form-grid">
+    <div><label>Customer name</label><input id="simName" placeholder="e.g. Priya" value="Priya"></div>
+    <div><label>Phone number</label><input id="simPhone" placeholder="e.g. 919812300000" value="919812300000"></div>
+    <div><label>Product name</label><input id="simProduct" placeholder="e.g. Table Lamp" value="Table Lamp"></div>
+    <div><label>Price (₹)</label><input id="simPrice" type="number" placeholder="e.g. 999" value="999"></div>
+    <div class="span2"><label>Message</label><input id="simMessage" placeholder="e.g. Can you send the payment link?" value="Can you send the payment link?"></div>
+    <button class="primary span2" style="justify-self:start" onclick="simulateMessage()">Add to queue</button>
+  </div>
+</div>
+
+<div class="backend-info">
+  <div><span class="backend-dot" id="engineDot"></span><b id="engineLabel">Engine active</b></div>
+  <span id="engineDesc">Client-side simulation of the NudgeFlow rule engine (mock mode — matches server.js logic)</span>
+  <span class="api-list">detectIntent · cooldown guard · follow-up cap · payment link · storage sync</span>
+</div>
+</div>
+
+<!-- ===================== RECOVERY VIEW ===================== -->
+<div id="view-recovery" class="hidden">
+  <section class="stats">
+    <div class="stat"><span>Recovered revenue</span><strong id="recStatRevenue">₹0</strong><em>all-time, this demo</em></div>
+    <div class="stat"><span>Recovered orders</span><strong id="recStatCount">0</strong><em id="recStatRate">0% of nudged</em></div>
+    <div class="stat"><span>Avg. time to recover</span><strong id="recStatTime">—</strong><em>after nudge sent</em></div>
+    <div class="stat"><span>Still pending</span><strong id="recStatPending">0</strong><em>nudged, not yet paid</em></div>
+  </section>
+  <div class="card">
+    <div class="card-head"><div><h2>Recovered orders</h2><p>Every customer who completed payment after a nudge</p></div></div>
+    <table class="data" id="recoveryTable"><thead><tr><th>Customer</th><th>Product</th><th>Amount</th><th>Template used</th><th>Recovered</th></tr></thead><tbody></tbody></table>
+  </div>
+</div>
+
+<!-- ===================== ANALYTICS VIEW ===================== -->
+<div id="view-analytics" class="hidden">
+  <section class="content-grid">
+    <div class="card">
+      <div class="card-head"><div><h2>Conversion funnel</h2><p>From scanned chat to recovered revenue</p></div></div>
+      <div class="funnel" id="funnel"></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div><h2>Intent detection breakdown</h2><p id="analyticsEngineNote">By classified intent</p></div></div>
+      <div id="intentBreakdown" style="padding:16px 18px"></div>
+    </div>
+  </section>
+  <div class="card" style="margin-top:17px">
+    <div class="card-head"><div><h2>Nudge template performance</h2><p>Which message variant actually recovers carts (A/B tracked)</p></div></div>
+    <div id="templatePerf"></div>
+  </div>
+</div>
+
+</main>
+
+<div class="modal" id="modal">
+  <div class="modal-box">
+    <button class="close" onclick="closeNudge()">×</button>
+    <div class="eyebrow">NUDGEFLOW · FOLLOW-UP</div>
+    <h2>Send a helpful nudge</h2>
+    <p>Personalized for <b id="modalName">—</b></p>
+    <div class="template-picker" id="templatePicker"></div>
+    <div class="preview" id="modalPreview">—</div>
+    <div class="modal-actions"><button class="outline" onclick="closeNudge()">Cancel</button><button class="primary" id="modalSendBtn" onclick="sendNudge()">Send nudge</button></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// =====================================================================
+// STATE
+// =====================================================================
+let chats = [
+  {id:"1001",customer:"Ananya",phone:"919876543210",product:"Handmade Tote Bag",amount:899,status:"abandoned",
+   messages:[{from:"customer",text:"Hi! Is the blue tote available?",time:"10:01 AM"},{from:"store",text:"Yes, it is available. I can send the payment link.",time:"10:03 AM"},{from:"customer",text:"Okay, I'll buy later.",time:"10:05 AM"}],
+   lastCustomerMessage:"Okay, I'll buy later.",minutesAgo:32,followUps:0,recovered:false,recoveredAt:null,recoveryMinutes:null,templateUsed:null,
+   intent:"purchase delayed",intentScore:.94,cooldownReady:true,classifiedBy:"rules",sending:false},
+  {id:"1002",customer:"Vikram",phone:"919812345678",product:"Leather Wallet",amount:1299,status:"abandoned",
+   messages:[{from:"customer",text:"Can you send the payment link?",time:"9:11 AM"}],
+   lastCustomerMessage:"Can you send the payment link?",minutesAgo:41,followUps:0,recovered:false,recoveredAt:null,recoveryMinutes:null,templateUsed:null,
+   intent:"payment intent",intentScore:.97,cooldownReady:true,classifiedBy:"rules",sending:false},
+  {id:"1003",customer:"Sneha",phone:"919899887766",product:"Ceramic Mug Set",amount:749,status:"abandoned",
+   messages:[{from:"customer",text:"Maybe I'll order tonight.",time:"11:24 AM"}],
+   lastCustomerMessage:"Maybe I'll order tonight.",minutesAgo:8,followUps:0,recovered:false,recoveredAt:null,recoveryMinutes:null,templateUsed:null,
+   intent:"purchase delayed",intentScore:.88,cooldownReady:false,cooldownMinutes:22,classifiedBy:"rules",sending:false},
+  {id:"1004",customer:"Rahul",phone:"919877665544",product:"Desk Lamp",amount:1299,status:"casual",
+   messages:[{from:"customer",text:"Thanks, looks nice!",time:"10:30 AM"}],
+   lastCustomerMessage:"Thanks, looks nice!",minutesAgo:36,followUps:0,recovered:false,recoveredAt:null,recoveryMinutes:null,templateUsed:null,
+   intent:"casual chat",intentScore:.12,cooldownReady:false,classifiedBy:"rules",sending:false}
+];
+let current = 0;
+let nextId = 1005;
+let useAI = false;              // AI vs rule-based intent classification
+let queueFilter = "all";        // all | ready | recovered
+let storageAvailable = false;
+let chosenTemplateId = null;    // template selected in the send modal
+
+// Per-template A/B performance tracking: {id: {label, sent, recovered}}
+let templateStats = {};
+
+// =====================================================================
+// NUDGE TEMPLATE LIBRARY
+// Multiple copy variants keyed by intent type + which follow-up number
+// this is. Selecting a different angle for follow-up #2 than #1, and
+// varying tone (reminder / urgency / small nudge) so every send isn't
+// identical copy. Each has a stable id so we can A/B track outcomes.
+// =====================================================================
+const TEMPLATES = {
+  "payment intent": [
+    {id:"pi-f0-direct", label:"Direct — first follow-up", followUp:0,
+     build:c=>`Hey ${c.customer}! 👋 Here's your payment link for the ${c.product} (₹${c.amount}):\n\nhttps://pay.nudgeflow.local/cart-${c.id}\n\nLet me know if you'd like any changes before you pay.`},
+    {id:"pi-f1-assist", label:"Offer help — second follow-up", followUp:1,
+     build:c=>`Hi ${c.customer}, just circling back on the ${c.product} 🙂 If something's blocking the payment (address, size, anything), tell me and I'll sort it. Link's still here: https://pay.nudgeflow.local/cart-${c.id}`}
+  ],
+  "purchase delayed": [
+    {id:"pd-f0-reminder", label:"Friendly reminder — first follow-up", followUp:0,
+     build:c=>`Hey ${c.customer}! 👋 Just checking in on your ${c.product}. If you'd still like it, you can complete your order here:\n\nhttps://pay.nudgeflow.local/cart-${c.id}`},
+    {id:"pd-f0-social", label:"Social proof — first follow-up", followUp:0,
+     build:c=>`Hi ${c.customer}! The ${c.product} you liked has been popular this week — a few are already on their way to other customers. Yours is still reserved here: https://pay.nudgeflow.local/cart-${c.id}`},
+    {id:"pd-f1-urgency", label:"Limited stock — second follow-up", followUp:1,
+     build:c=>`Hi ${c.customer}, quick note — we're running low on the ${c.product}. Wanted to make sure you don't miss it: https://pay.nudgeflow.local/cart-${c.id}`},
+    {id:"pd-f1-discount", label:"Small discount — second follow-up", followUp:1,
+     build:c=>`Hey ${c.customer}, since you were close to ordering the ${c.product} — here's 5% off if you complete it today: https://pay.nudgeflow.local/cart-${c.id}`}
+  ],
+  "uncertain": [
+    {id:"un-f0-checkin", label:"Gentle check-in", followUp:0,
+     build:c=>`Hi ${c.customer}! Just checking if you had any questions about the ${c.product} before you decide. Happy to help — and here's the link if you're ready: https://pay.nudgeflow.local/cart-${c.id}`}
+  ]
+};
+function templatesFor(c){
+  const key = TEMPLATES[c.intent] ? c.intent : "purchase delayed";
+  const list = TEMPLATES[key].filter(t=>t.followUp===Math.min(c.followUps,1));
+  return list.length ? list : TEMPLATES[key];
+}
+function recordTemplateStat(tpl, recovered){
+  if(!templateStats[tpl.id]) templateStats[tpl.id]={label:tpl.label,sent:0,recovered:0};
+  if(recovered) templateStats[tpl.id].recovered++;
+  else templateStats[tpl.id].sent++;
+}
+
+// =====================================================================
+// STORAGE (persistent_storage_for_artifacts) — falls back silently to
+// in-memory only state if window.storage isn't available in this
+// rendering context (e.g. opened outside claude.ai).
+// =====================================================================
+async function initStorage(){
+  const statusEl = document.getElementById("storageStatus");
+  if (!window.storage){
+    storageAvailable = false;
+    statusEl.textContent = "Storage: in-memory only";
+    return;
+  }
+  try{
+    const saved = await window.storage.get("nudgeflow:state");
+    storageAvailable = true;
+    if (saved && saved.value){
+      const parsed = JSON.parse(saved.value);
+      if (parsed.chats && parsed.chats.length){
+        chats = parsed.chats;
+        nextId = parsed.nextId || nextId;
+        templateStats = parsed.templateStats || {};
+      }
+      statusEl.textContent = "Storage: restored session";
+    } else {
+      statusEl.textContent = "Storage: connected";
+    }
+  } catch(e){
+    storageAvailable = true; // key just doesn't exist yet
+    statusEl.textContent = "Storage: connected";
+  }
+}
+async function persist(){
+  if (!storageAvailable || !window.storage) return;
+  try{
+    await window.storage.set("nudgeflow:state", JSON.stringify({chats, nextId, templateStats}));
+  } catch(e){
+    console.error("Storage save failed", e);
+  }
+}
+
+// =====================================================================
+// INTENT DETECTION — rule-based (default, offline, deterministic)
+// =====================================================================
+function detectIntentRules(text){
+  const t = text.toLowerCase();
+  const payment = ["payment link","pay now","send the link","upi","reserve","book it","take it","place order"];
+  const buying = ["buy later","i'll buy","ill buy","want one","order tonight","will order","planning to buy"];
+  const casual = ["nice","cool","thanks","just checking","what colors","only asking","not sure yet"];
+  if (payment.some(x=>t.includes(x))) return {intent:"payment intent",score:.95};
+  if (buying.some(x=>t.includes(x))) return {intent:"purchase delayed",score:.88};
+  if (casual.some(x=>t.includes(x))) return {intent:"casual chat",score:.12};
+  return {intent:"uncertain",score:.45};
+}
+
+// =====================================================================
+// INTENT DETECTION — AI-powered (Claude via the Messages API)
+// Uses the conversation's full message history for context, not just
+// the last line, and asks for strict JSON so it can be parsed safely.
+// Falls back to the rule-based engine on any network/parse failure —
+// this mirrors what a production server should do if the model call
+// times out or the API is unreachable.
+// =====================================================================
+async function detectIntentAI(c){
+  const history = c.messages.map(m=>`${m.from==="customer"?"Customer":"Store"}: ${m.text}`).join("\n");
+  const prompt = `You are classifying WhatsApp purchase intent for an e-commerce seller.
+Conversation so far:
+${history}
+
+Classify the CUSTOMER's most recent message into exactly one of these intents:
+- "payment intent": explicitly asking for a payment link / how to pay / ready to pay now
+- "purchase delayed": wants to buy but is delaying ("I'll buy later", "maybe tonight", stock/price hesitation that still implies future purchase)
+- "casual chat": browsing, small talk, thanks, no real buying signal
+- "uncertain": ambiguous, not enough signal either way
+
+Respond with ONLY a JSON object, no markdown fences, no preamble:
+{"intent": "<one of the four options above>", "score": <number 0 to 1, confidence this is genuine buying intent>, "reasoning": "<one short sentence>"}`;
+
+  const response = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({
+      model: "claude-sonnet-4-6",
+      max_tokens: 1000,
+      messages: [{role:"user", content: prompt}]
+    })
+  });
+  if (!response.ok) throw new Error("API error " + response.status);
+  const data = await response.json();
+  const text = (data.content||[]).map(b=>b.text||"").join("").trim();
+  const clean = text.replace(/```json|```/g,"").trim();
+  const parsed = JSON.parse(clean);
+  const validIntents = ["payment intent","purchase delayed","casual chat","uncertain"];
+  if (!validIntents.includes(parsed.intent) || typeof parsed.score !== "number"){
+    throw new Error("Malformed AI response");
+  }
+  return {intent: parsed.intent, score: Math.max(0,Math.min(1,parsed.score)), reasoning: parsed.reasoning||""};
+}
+
+function toggleAI(on){
+  useAI = on;
+  document.getElementById("aiBadge").style.display = on ? "inline-block" : "none";
+  document.getElementById("engineStatus").textContent = on ? "AI intent detection (Claude)" : "Rule-based intent detection";
+  document.getElementById("engineLabel").textContent = on ? "AI engine active" : "Engine active";
+  document.getElementById("engineDesc").textContent = on
+    ? "Live calls to the Messages API classify each chat's genuine buying intent, with the rule engine as offline fallback"
+    : "Client-side simulation of the NudgeFlow rule engine (mock mode — matches server.js logic)";
+  showToast(on ? "AI intent detection enabled" : "Switched back to rule-based detection");
+}
+
+// =====================================================================
+// SERVER-SIDE-STYLE GUARDRAIL
+// This is the single function both the UI (to enable/disable buttons)
+// and the actual send path call. In a real deployment this exact logic
+// must live on the server, not the client — a disabled button is only
+// a UX hint, never the real enforcement. Centralizing it here means
+// there is one place to port to a server route later.
+// =====================================================================
+function serverValidateNudge(c){
+  if (!c) return {ok:false, reason:"No customer selected"};
+  if (c.sending) return {ok:false, reason:"A send is already in flight for this customer"};
+  if (c.recovered) return {ok:false, reason:"Already recovered — no nudge needed"};
+  if (c.intentScore < .7) return {ok:false, reason:"No nudge: genuine purchase intent was not detected"};
+  if (!c.cooldownReady) return {ok:false, reason:`30-minute cooldown is not complete. Wait ${c.cooldownMinutes} minutes.`};
+  if (c.followUps >= 2) return {ok:false, reason:"Maximum of 2 follow-ups reached."};
+  return {ok:true};
+}
+function canNudge(c){ return serverValidateNudge(c).ok; }
+
+// =====================================================================
+// RENDER HELPERS
+// =====================================================================
+function formatPhone(p){
+  const s = String(p||"").replace(/[^\d]/g,"");
+  if (s.length>=12) return `+${s.slice(0,2)} ${s.slice(2,7)} ${s.slice(7)}`;
+  return s || "—";
+}
+function fmtMinutes(m){
+  if (m==null) return "—";
+  if (m<60) return `${m}m`;
+  return `${Math.floor(m/60)}h ${m%60}m`;
+}
+
+function copyLink(){
+  const link = document.getElementById("convLink").textContent;
+  if (!link || link==="—") return;
+  const done = () => showToast("Payment link copied — works for any customer, nudge-eligible or not");
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(link).then(done).catch(done);
+  } else {
+    const ta = document.createElement("textarea");
+    ta.value = link; document.body.appendChild(ta); ta.select();
+    document.execCommand("copy"); document.body.removeChild(ta);
+    done();
+  }
+}
+
+function renderStats(){
+  const abandoned = chats.filter(c=>c.status==="abandoned").length;
+  const nudged = chats.reduce((n,c)=>n+c.followUps,0);
+  const waiting = chats.filter(c=>canNudge(c)).length;
+  const recovered = chats.filter(c=>c.recovered);
+  const recoveredRevenue = recovered.reduce((n,c)=>n+c.amount,0);
+  document.getElementById("statChats").textContent = chats.length;
+  document.getElementById("statAbandoned").textContent = abandoned;
+  document.getElementById("statAbandonedPct").textContent = Math.round(abandoned/chats.length*100)+"% of chats";
+  document.getElementById("statNudged").textContent = nudged;
+  document.getElementById("statWaiting").textContent = waiting+" waiting";
+  document.getElementById("statRevenue").textContent = "₹"+recoveredRevenue.toLocaleString("en-IN");
+  document.getElementById("statRecoveredCount").textContent = recovered.length+" recovered";
+  document.getElementById("navChats").textContent = chats.length;
+  document.getElementById("navQueue").textContent = chats.filter(c=>canNudge(c)).length;
+
+  const nudgedChats = chats.filter(c=>c.followUps>0);
+  const rate = nudgedChats.length ? Math.round(recovered.length/nudgedChats.length*100) : 0;
+  document.getElementById("recoveryRatePill").textContent = rate+"%";
+
+  renderOverviewBars(recovered);
+}
+
+function renderOverviewBars(recovered){
+  const box = document.getElementById("overviewBars");
+  const labels = document.getElementById("overviewBarLabels");
+  const items = recovered.slice(-7);
+  box.innerHTML = ""; labels.innerHTML = "";
+  if (!items.length){
+    box.innerHTML = `<div style="width:100%;text-align:center;align-self:center;color:var(--muted);font-size:11px">No recovered orders yet — send a nudge and simulate a payment to populate this chart.</div>`;
+    return;
+  }
+  const max = Math.max(...items.map(c=>c.amount));
+  items.forEach(c=>{
+    const h = Math.max(8, Math.round(c.amount/max*100));
+    const d = document.createElement("div");
+    d.style.height = h+"%";
+    d.title = `${c.customer} · ₹${c.amount}`;
+    box.appendChild(d);
+    const l = document.createElement("span");
+    l.textContent = c.customer.slice(0,6);
+    labels.appendChild(l);
+  });
+}
+
+function renderQueue(){
+  const list = document.getElementById("queueList");
+  list.innerHTML = "";
+  let visible = chats;
+  if (queueFilter==="ready") visible = chats.filter(c=>canNudge(c));
+  if (queueFilter==="recovered") visible = chats.filter(c=>c.recovered);
+
+  if (!visible.length){
+    list.innerHTML = `<div class="empty-state">No customers match this filter right now.</div>`;
+    return;
+  }
+
+  visible.forEach(c=>{
+    const el = document.createElement("div");
+    const idx = chats.indexOf(c);
+    el.className = "customer"+(idx===current?" selected":"");
+    el.onclick = ()=>selectCustomer(idx);
+    const initials = c.customer.charAt(0);
+    let statusClass = "ignored", statusText = "NO NUDGE";
+    if (c.recovered){ statusClass="recovered-badge"; statusText="RECOVERED"; }
+    else if (c.status==="casual" || c.intentScore<.7){ statusClass="ignored"; statusText="NO NUDGE"; }
+    else if (!c.cooldownReady){ statusClass="cooldown"; statusText=`WAIT ${c.cooldownMinutes}m`; }
+    else if (c.followUps>=2){ statusClass="ignored"; statusText="MAXED OUT"; }
+    else { statusClass="waiting"; statusText="READY"; }
+    el.innerHTML = `
+      <div class="avatar a${(idx%4)+1}">${initials}</div>
+      <div class="customer-info">
+        <strong>${c.customer}</strong>
+        <span>${c.product} · ₹${c.amount}</span>
+        <small>"${c.lastCustomerMessage}" · ${c.minutesAgo} min ago</small>
+        <small>📞 ${formatPhone(c.phone)}</small>
+      </div>
+      <div class="intent ${c.intentScore<.5?"low":""}">
+        <strong>${Math.round(c.intentScore*100)}%</strong><small>${c.intent}${c.classifiedBy==="ai"?" · AI":""}</small>
+      </div>
+      <span class="status ${statusClass}">${statusText}</span>`;
+    list.appendChild(el);
+  });
+}
+
+function setQueueFilter(f){
+  queueFilter = f;
+  document.querySelectorAll("#queueFilterTabs button").forEach(b=>b.classList.toggle("active", b.dataset.filter===f));
+  document.getElementById("queueTitle").textContent =
+    f==="ready" ? "Nudge queue — ready" : f==="recovered" ? "Nudge queue — recovered" : "Nudge queue";
+  document.getElementById("queueSub").textContent =
+    f==="ready" ? "Eligible for a nudge right now" : f==="recovered" ? "Customers who completed payment" : "Customers with purchase-intent signals";
+  renderQueue();
+}
+
+function selectCustomer(i){
+  current = i;
+  const c = chats[i];
+  renderQueue();
+  document.getElementById("convName").textContent = c.customer;
+  document.getElementById("convIntentPill").textContent = `${Math.round(c.intentScore*100)}% purchase intent`;
+  const chatBox = document.getElementById("chatBox");
+  chatBox.innerHTML = c.messages.map(m=>
+    `<div class="msg ${m.from==="customer"?"customer-msg":"store-msg"+(m.system?" system":"")}">${m.text}<time>${m.time}</time></div>`
+  ).join("");
+  if (c.status==="abandoned" && !c.recovered){
+    chatBox.innerHTML += `<div class="signal">✦ NudgeFlow detected a strong abandonment signal${c.classifiedBy==="ai"?" (AI classified)":""}</div>`;
+  }
+  if (c.recovered){
+    chatBox.innerHTML += `<div class="signal" style="background:var(--bluebg);color:var(--blue)">✓ Recovered ${fmtMinutes(c.recoveryMinutes)} after nudge · template "${c.templateUsed||"—"}"</div>`;
+  }
+  document.getElementById("metaPhone").textContent = formatPhone(c.phone);
+  document.getElementById("metaProduct").textContent = c.product;
+  document.getElementById("metaPrice").textContent = "₹" + c.amount.toLocaleString("en-IN");
+  document.getElementById("convLink").textContent = `https://pay.nudgeflow.local/cart-${c.id}`;
+  document.getElementById("decIntent").textContent = c.intent;
+  const decCooldown = document.getElementById("decCooldown");
+  decCooldown.textContent = c.cooldownReady ? `Complete · ${c.minutesAgo}m` : `Waiting · ${c.cooldownMinutes}m`;
+  decCooldown.className = c.cooldownReady ? "green" : "";
+  document.getElementById("decFollowups").textContent = `${c.followUps} / 2`;
+  document.getElementById("nudgeBtn").disabled = !canNudge(c);
+  renderStats();
+}
+
+// =====================================================================
+// NUDGE MODAL — pick a template variant, preview, send
+// =====================================================================
+function openNudge(){
+  const c = chats[current];
+  const check = serverValidateNudge(c);
+  if (!check.ok){ showToast(check.reason); return; }
+
+  const options = templatesFor(c);
+  chosenTemplateId = options[0].id;
+  const picker = document.getElementById("templatePicker");
+  picker.innerHTML = options.map(t=>`
+    <label class="${t.id===chosenTemplateId?"chosen":""}" data-tid="${t.id}">
+      <input type="radio" name="tpl" value="${t.id}" ${t.id===chosenTemplateId?"checked":""} onchange="pickTemplate('${t.id}')">
+      <span><b>${t.label}</b></span>
+    </label>`).join("");
+
+  document.getElementById("modalName").textContent = c.customer;
+  renderTemplatePreview(c, options[0]);
+  document.getElementById("modal").classList.add("show");
+}
+function pickTemplate(id){
+  chosenTemplateId = id;
+  const c = chats[current];
+  const tpl = [].concat(...Object.values(TEMPLATES)).find(t=>t.id===id);
+  document.querySelectorAll("#templatePicker label").forEach(l=>l.classList.toggle("chosen", l.dataset.tid===id));
+  renderTemplatePreview(c, tpl);
+}
+function renderTemplatePreview(c, tpl){
+  document.getElementById("modalPreview").innerHTML = tpl.build(c).replace(/\n/g,"<br>");
+}
+function closeNudge(){ document.getElementById("modal").classList.remove("show"); }
+
+async function sendNudge(){
+  const c = chats[current];
+  const check = serverValidateNudge(c);
+  if (!check.ok){ showToast(check.reason); closeNudge(); return; }
+
+  const tpl = [].concat(...Object.values(TEMPLATES)).find(t=>t.id===chosenTemplateId) || templatesFor(c)[0];
+  c.sending = true; // guard against double-send while this "request" is in flight
+  const msgText = tpl.build(c);
+  c.followUps++;
+  c.templateUsed = tpl.label;
+  c.messages.push({from:"store",text:msgText,time:"now"});
+  closeNudge();
+  showToast("✓ Nudge sent using template: "+tpl.label);
+  selectCustomer(current);
+  await persist();
+
+  // Simulate the customer's response after a short delay: higher intent
+  // score and payment-intent chats are more likely to convert, giving
+  // the Recovery/Analytics pages real (if synthetic) outcome data.
+  setTimeout(()=>{
+    c.sending = false;
+    const chance = c.intent==="payment intent" ? 0.7 : 0.4;
+    const converts = Math.random() < chance;
+    if (converts){
+      c.recovered = true;
+      c.recoveredAt = Date.now();
+      c.recoveryMinutes = Math.floor(4 + Math.random()*40);
+      c.messages.push({from:"customer",text:"Paid! Thank you 🙏",time:"now",system:false});
+      c.messages.push({from:"store",text:"Payment received ✅ Your order is confirmed.",time:"now",system:true});
+      recordTemplateStat(tpl, true);
+      showToast(`💸 ${c.customer} completed payment — ₹${c.amount} recovered`);
+    } else {
+      recordTemplateStat(tpl, false);
+    }
+    if (chats[current]===c) selectCustomer(current);
+    else { renderQueue(); renderStats(); }
+    persist();
+  }, 6000 + Math.random()*4000);
+}
+
+// =====================================================================
+// DETECT INTENT (manual button) — routes to AI or rules
+// =====================================================================
+async function detectSelected(){
+  const c = chats[current];
+  if (!c) return;
+  const btn = document.getElementById("detectBtn");
+  btn.disabled = true;
+  const dot = document.getElementById("engineDot");
+  dot.classList.add("busy");
+  try{
+    let r;
+    if (useAI){
+      btn.textContent = "Asking Claude…";
+      r = await detectIntentAI(c);
+      c.classifiedBy = "ai";
+    } else {
+      r = detectIntentRules(c.lastCustomerMessage);
+      c.classifiedBy = "rules";
+    }
+    c.intent = r.intent; c.intentScore = r.score;
+    c.status = r.score>=.7 ? "abandoned" : "casual";
+    showToast(`${r.intent} · ${Math.round(r.score*100)}% confidence${useAI?" (AI)":""}`);
+  } catch(e){
+    console.error(e);
+    const r = detectIntentRules(c.lastCustomerMessage);
+    c.intent = r.intent; c.intentScore = r.score; c.classifiedBy = "rules";
+    c.status = r.score>=.7 ? "abandoned" : "casual";
+    showToast("AI classification unavailable — fell back to rule-based detection");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Detect intent";
+    dot.classList.remove("busy");
+  }
+  selectCustomer(current);
+  await persist();
+}
+
+// =====================================================================
+// SIMULATE INCOMING MESSAGE
+// =====================================================================
+async function simulateMessage(){
+  const name = document.getElementById("simName").value.trim() || "Customer";
+  const phoneRaw = document.getElementById("simPhone").value.trim();
+  const phone = phoneRaw.replace(/[^\d]/g,"") || String(919000000000 + Math.floor(Math.random()*99999999));
+  const product = document.getElementById("simProduct").value.trim() || "Sample Product";
+  const priceInput = parseFloat(document.getElementById("simPrice").value);
+  const amount = Number.isFinite(priceInput) && priceInput>0 ? Math.round(priceInput) : 500 + Math.floor(Math.random()*1200);
+  const text = document.getElementById("simMessage").value.trim();
+  if (!text){ showToast("Type a message first"); return; }
+
+  const c = {
+    id: String(nextId++), customer:name, phone, product, amount,
+    status:"casual", messages:[{from:"customer",text,time:"now"}],
+    lastCustomerMessage:text, minutesAgo:0, followUps:0, recovered:false,
+    recoveredAt:null, recoveryMinutes:null, templateUsed:null,
+    intent:"uncertain", intentScore:.45, cooldownReady:false, cooldownMinutes:30,
+    classifiedBy:"rules", sending:false
+  };
+  chats.push(c);
+  current = chats.length-1;
+  renderQueue(); selectCustomer(current);
+
+  try{
+    let r;
+    if (useAI){ r = await detectIntentAI(c); c.classifiedBy="ai"; }
+    else { r = detectIntentRules(text); c.classifiedBy="rules"; }
+    c.intent = r.intent; c.intentScore = r.score;
+    c.status = r.score>=.7 ? "abandoned" : "casual";
+  } catch(e){
+    const r = detectIntentRules(text);
+    c.intent = r.intent; c.intentScore = r.score; c.classifiedBy="rules";
+    c.status = r.score>=.7 ? "abandoned" : "casual";
+  }
+  renderQueue(); selectCustomer(current);
+  showToast(`Classified as "${c.intent}" (${Math.round(c.intentScore*100)}%)${useAI?" via AI":""}. Cooldown started.`);
+  await persist();
+
+  // sped-up cooldown for the demo (real rule = 30 min; here 30 ticks ≈ 10s)
+  let remaining = 30;
+  const timer = setInterval(()=>{
+    remaining -= 3;
+    c.cooldownMinutes = Math.max(remaining,0);
+    if (remaining<=0){
+      c.cooldownReady = true;
+      c.cooldownMinutes = 0;
+      clearInterval(timer);
+      showToast(`${c.customer}'s cooldown is complete — ready to nudge`);
+      persist();
+    }
+    if (chats[current]===c) selectCustomer(current);
+    else { renderQueue(); renderStats(); }
+  }, 1000);
+}
+
+// =====================================================================
+// PAGE NAVIGATION
+// =====================================================================
+function setView(view){
+  document.querySelectorAll("#mainNav a").forEach(a=>a.classList.toggle("active", a.dataset.nav===view));
+  document.getElementById("view-overview").classList.toggle("hidden", view!=="overview" && view!=="chats" && view!=="queue");
+  document.getElementById("view-recovery").classList.toggle("hidden", view!=="recovery");
+  document.getElementById("view-analytics").classList.toggle("hidden", view!=="analytics");
+  if (view==="chats") setQueueFilter("all");
+  if (view==="queue") setQueueFilter("ready");
+  if (view==="overview") setQueueFilter(queueFilter);
+  if (view==="recovery") renderRecoveryPage();
+  if (view==="analytics") renderAnalyticsPage();
+}
+document.getElementById("mainNav").addEventListener("click", e=>{
+  const a = e.target.closest("a[data-nav]");
+  if (a) setView(a.dataset.nav);
+});
+
+// =====================================================================
+// RECOVERY PAGE
+// =====================================================================
+function renderRecoveryPage(){
+  const recovered = chats.filter(c=>c.recovered);
+  const nudged = chats.filter(c=>c.followUps>0);
+  const pending = nudged.filter(c=>!c.recovered);
+  const revenue = recovered.reduce((n,c)=>n+c.amount,0);
+  const avgTime = recovered.length ? Math.round(recovered.reduce((n,c)=>n+(c.recoveryMinutes||0),0)/recovered.length) : null;
+
+  document.getElementById("recStatRevenue").textContent = "₹"+revenue.toLocaleString("en-IN");
+  document.getElementById("recStatCount").textContent = recovered.length;
+  document.getElementById("recStatRate").textContent = nudged.length ? Math.round(recovered.length/nudged.length*100)+"% of nudged" : "0% of nudged";
+  document.getElementById("recStatTime").textContent = avgTime!=null ? fmtMinutes(avgTime) : "—";
+  document.getElementById("recStatPending").textContent = pending.length;
+
+  const tbody = document.querySelector("#recoveryTable tbody");
+  if (!recovered.length){
+    tbody.innerHTML = `<tr><td colspan="5" class="empty-state">No recovered orders yet. Send a nudge from Overview and wait for the simulated customer response.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = recovered.slice().reverse().map(c=>`
+    <tr>
+      <td><strong>${c.customer}</strong><br><span style="color:var(--muted)">${formatPhone(c.phone)}</span></td>
+      <td>${c.product}</td>
+      <td>₹${c.amount.toLocaleString("en-IN")}</td>
+      <td>${c.templateUsed||"—"}</td>
+      <td>${fmtMinutes(c.recoveryMinutes)} after nudge</td>
+    </tr>`).join("");
+}
+
+// =====================================================================
+// ANALYTICS PAGE
+// =====================================================================
+function renderAnalyticsPage(){
+  const scanned = chats.length;
+  const abandoned = chats.filter(c=>c.status==="abandoned"||c.recovered).length;
+  const nudged = chats.filter(c=>c.followUps>0).length;
+  const recovered = chats.filter(c=>c.recovered).length;
+  const steps = [
+    {label:"Chats scanned", value:scanned},
+    {label:"Intent signal", value:abandoned},
+    {label:"Nudges sent", value:nudged},
+    {label:"Recovered", value:recovered}
+  ];
+  const max = Math.max(1, steps[0].value);
+  document.getElementById("funnel").innerHTML = steps.map(s=>`
+    <div class="funnel-step">
+      <span>${s.label}</span>
+      <div class="funnel-track"><div class="funnel-fill" style="width:${Math.round(s.value/max*100)}%"></div></div>
+      <strong style="text-align:right">${s.value}</strong>
+    </div>`).join("");
+
+  const byIntent = {};
+  chats.forEach(c=>{ byIntent[c.intent] = (byIntent[c.intent]||0)+1; });
+  const aiCount = chats.filter(c=>c.classifiedBy==="ai").length;
+  document.getElementById("analyticsEngineNote").textContent =
+    aiCount ? `By classified intent · ${aiCount} of ${chats.length} classified via AI` : "By classified intent · all rule-based so far";
+  const ibox = document.getElementById("intentBreakdown");
+  const total = chats.length || 1;
+  ibox.innerHTML = Object.entries(byIntent).map(([intent,count])=>`
+    <div style="margin-bottom:11px">
+      <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px"><span>${intent}</span><b>${count}</b></div>
+      <div class="mini-track"><div class="mini-fill" style="width:${Math.round(count/total*100)}%"></div></div>
+    </div>`).join("");
+
+  const perfBox = document.getElementById("templatePerf");
+  const entries = Object.entries(templateStats);
+  if (!entries.length){
+    perfBox.innerHTML = `<div class="empty-state">No nudges sent yet — template performance appears here once you send a few.</div>`;
+    return;
+  }
+  perfBox.innerHTML = entries.map(([id,s])=>{
+    const totalSent = s.sent + s.recovered;
+    const rate = totalSent ? Math.round(s.recovered/totalSent*100) : 0;
+    return `<div class="tplcard">
+      <h3>${s.label}</h3>
+      <div class="row"><span>${totalSent} sent · ${s.recovered} recovered</span><span class="rate">${rate}%</span></div>
+      <div class="mini-track"><div class="mini-fill" style="width:${rate}%"></div></div>
+    </div>`;
+  }).join("");
+}
+
+// =====================================================================
+// MISC
+// =====================================================================
+function refreshAll(){ renderQueue(); selectCustomer(current); showToast("Dashboard refreshed"); }
+document.getElementById("modal").addEventListener("click", e=>{ if(e.target.id==="modal") closeNudge(); });
+function showToast(text){
+  const t = document.getElementById("toast");
+  t.textContent = text; t.classList.add("show");
+  clearTimeout(window.__toastTimer);
+  window.__toastTimer = setTimeout(()=>t.classList.remove("show"),3000);
+}
+
+// =====================================================================
+// INIT
+// =====================================================================
+(async function init(){
+  await initStorage();
+  renderQueue();
+  selectCustomer(0);
+})();
+</script>
+</body>
+</html>
